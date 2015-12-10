@@ -1,0 +1,59 @@
+Program
+    DeclList
+        FnDecl
+            Type (VOID)
+            ID (main)
+            LPAREN
+            FormalsList
+            RPAREN
+            FnBody
+                LCURLY
+                DeclList
+                    VarDecl
+                        Type (INT)
+                        ID (a)
+                        SEMICOLON
+                    VarDecl
+                        Type (INT)
+                        ID (b)
+                        SEMICOLON
+                    VarDecl
+                        Type (INT)
+                        ID (c)
+                        SEMICOLON
+                StmtList
+                    AssignStmt
+                        ID (a)
+                        ASSIGN
+                        INTLITERAL (10)
+                        SEMICOLON
+                    AssignStmt
+                        ID (b)
+                        ASSIGN
+                        INTLITERAL (5)
+                        SEMICOLON
+                    AssignStmt
+                        ID (a)
+                        ASSIGN
+                        PlusExpr
+                            ID (a)
+                            PLUS
+                            ID (b)
+                        SEMICOLON
+                    AssignStmt
+                        ID (b)
+                        ASSIGN
+                        MinusExpr
+                            ID (a)
+                            MINUS
+                            ID (b)
+                        SEMICOLON
+                    AssignStmt
+                        ID (a)
+                        ASSIGN
+                        MinusExpr
+                            ID (a)
+                            MINUS
+                            ID (b)
+                        SEMICOLON
+                RCURLY

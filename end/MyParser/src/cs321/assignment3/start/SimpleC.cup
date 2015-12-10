@@ -1,0 +1,173 @@
+
+package cs321.assignment3.start;
+
+import java_cup.runtime.*;
+import java.util.*;
+
+parser code {: 
+
+public void syntax_error(Symbol currToken) {
+    if (currToken.value == null) {
+       Errors.fatal(0,0, "Syntax error at end of file");
+    }
+    else {
+       Errors.fatal(((TokenVal)currToken.value).linenum,
+                ((TokenVal)currToken.value).charnum,
+            "Syntax error");
+    }
+    System.exit(-1);
+}
+
+:};
+
+
+/* Terminals (tokens returned by the scanner)*/
+
+terminal            INT;
+terminal            BOOL;
+terminal            VOID;
+terminal TokenVal TRUE;
+terminal TokenVal FALSE;
+terminal TokenVal NULL;
+terminal            IF;
+terminal            ELSE;
+terminal            WHILE;
+terminal          FOR;
+terminal            RETURN;
+terminal StringTokenVal     ID;
+terminal IntLitTokenVal INTLITERAL;
+terminal StringTokenVal STRINGLITERAL;
+terminal            LCURLY;
+terminal            RCURLY;
+terminal            LSQBRACKET;
+terminal            RSQBRACKET;
+terminal            LPAREN;
+terminal            RPAREN;
+terminal            COMMA;
+terminal            ASSIGN;
+terminal            SEMICOLON;
+terminal            PLUS;
+terminal            MINUS;
+terminal            TIMES;
+terminal            DIVIDE;
+terminal            NOT;
+terminal            AND;
+terminal            OR;
+terminal            EQUALS;
+terminal            NOTEQUALS;
+terminal            LESS;
+terminal            GREATER;
+terminal            LESSEQ;
+terminal            GREATEREQ;
+terminal            READ;
+terminal            WRITE;
+terminal          ADDROF;
+terminal          SIZEOF;
+terminal          PERIOD;
+terminal          STRDEREF;
+terminal          STRUCT;
+terminal          PLUSEQL;
+terminal          MINUSEQL;
+terminal          TIMESEQL;
+terminal          DIVEQL;
+terminal          PERCENT;
+
+/* Nonterminals */
+
+non terminal Program      program;
+non terminal LinkedList       declList;
+non terminal Decl           decl;
+non terminal LinkedList       varDeclList;
+non terminal VarDecl      varDecl;
+non terminal FnDecl       fnDecl; 
+non terminal FnPreDecl    fnPreDecl;
+non terminal StructDecl   structDecl;
+non terminal StructPreDecl structPreDecl;
+non terminal FormalsList  formals;
+non terminal LinkedList       formalsList;
+non terminal FormalDecl   formalDecl;
+non terminal FnBody       fnBody;
+non terminal LinkedList       stmtList;
+non terminal Stmt         stmt;
+non terminal Expr          exp;
+non terminal Expr          term;
+non terminal CallExpr      fncall;
+non terminal LinkedList       actualList;
+non terminal Type           type;
+non terminal Expr          loc;
+non terminal ID           id;
+non terminal Integer          pointers;
+non terminal Stmt         forStmt;
+non terminal Stmt         assign;
+ 
+precedence left AND, OR;
+precedence nonassoc LESS, GREATER, LESSEQ, GREATEREQ, EQUALS, NOTEQUALS;
+precedence left PLUS, MINUS;
+precedence left TIMES, DIVIDE, PERCENT;
+precedence left PERIOD, STRDEREF, LSQBRACKET;
+precedence left ADDROF;
+precedence nonassoc NOT;
+
+start with program; 
+
+/*
+ * grammar with actions
+ *
+ */
+program ::= declList: d {: RESULT = new Program(new DeclList(d)); :}
+          ;
+
+declList ::= declList: dl decl: d {: dl.addLast(d); RESULT = dl; :}
+           | /* epsilon */ {: RESULT = new LinkedList(); :}
+           ;
+
+decl ::= varDecl: v {: RESULT = v; :}
+       | fnDecl: f {: RESULT = f; :}
+       ;
+
+varDeclList ::= varDeclList: l varDecl: var {: l.addLast(var); RESULT = l; :}
+              | /* epsilon */ {: RESULT = new LinkedList(); :}
+              ;
+
+varDecl ::= type: t id: i SEMICOLON
+             {: RESULT = new VarDecl(t, i, VarDecl.NOT_ARRAY, 0); :}
+          ;
+
+fnDecl ::= type: t id: i formals: f fnBody: body {: RESULT = new FnDecl(t, 0, i, f, body); :}
+         ;
+ 
+formals ::= LPAREN RPAREN {: RESULT = new FormalsList(new LinkedList()); :}
+          ;
+
+fnBody ::= LCURLY varDeclList: v stmtList: s RCURLY 
+              {: RESULT = new FnBody(new DeclList(v), new StmtList(s)); :}
+         ;
+
+stmtList ::= stmtList: l stmt: s {: l.addLast(s); RESULT = l; :}
+          |  /* epsilon */ {: RESULT = new LinkedList(); :}
+          ; 
+
+stmt ::= assign:a SEMICOLON {: RESULT = a; :}
+      ;
+
+assign ::= loc: l ASSIGN exp: e {: RESULT = new AssignStmt(l, e); :}
+         ;
+
+exp ::= exp: e1 PLUS exp: e2 {: RESULT = new PlusExpr(e1, e2); :}
+      | exp: e1 MINUS exp: e2 {: RESULT = new MinusExpr(e1, e2); :}
+      | term: t {: RESULT = t; :}
+      ;
+      
+term ::= loc: l {: RESULT = l; :}
+       | INTLITERAL: i {: RESULT = new IntLiteral(i.intVal); :}
+       ;
+         
+type ::= INT {: RESULT = new IntType(); :} 
+       | VOID {: RESULT = new VoidType(); :}
+       ;
+
+loc ::= id: i {: RESULT = i; :}
+      ;
+
+id ::= ID: i {: RESULT = new ID(i.strVal); :}
+     ; 

@@ -17,6 +17,13 @@ public void syntax_error(Symbol curToken) {
     System.exit(-1);
 } 
 
+public void missing_character(char c)
+{
+	MySymbol cur = (MySymbol)cur_token;
+    Errors.fatal(cur.getLine(), cur.getColumn() , "Syntax error: missing '" + c + "' before token " + ((Scanner)this.getScanner()).getTokName(cur.sym) + " ("+ ((Scanner)this.getScanner()).yytext() + ")"); 
+    System.exit(-1);
+}
+
 :};
 
 
@@ -87,12 +94,38 @@ non terminal Type           type;
 non terminal Expr          loc;
 non terminal ID           id;
 non terminal Stmt         assignStmt;
+non terminal LinkedList		formalsList;
+non terminal FormalDecl		formalDecl;
+non terminal StructDecl		structDecl;
+non terminal Stmt			forInitStmt;
+non terminal LinkedList		actualList;
+non terminal FuncDecl		funcDecl;
 
 non terminal BinaryExpr     binaryExpr;
+non terminal IfStmt			ifStmt;
+non terminal IfElseStmt		ifElseStmt;
+non terminal ForStmt		forStmt;
+non terminal WhileStmt		whileStmt;
+non terminal ReturnStmt		returnStmt;
+non terminal CallStmt		callStmt;
+non terminal CallExpr		callExpr;
+non terminal UnaryExpr		unaryExpr;
+non terminal ArrayExpr		arrayExpr;
 
 
+non terminal semirest;
+non terminal rleft;
+
+
+precedence left AND, OR;
+precedence nonassoc LESS, GREATER, LESSEQ, GREATEREQ, EQUALS, NOTEQUALS;
 precedence left PLUS, MINUS;
-precedence left TIMES, DIVIDE;
+precedence left TIMES, DIVIDE, PERCENT;
+precedence left PERIOD, LSQBRACKET;
+precedence left ADDROF;
+precedence left ID;
+precedence left INT, BOOL, VOID, STRUCT;
+precedence nonassoc NOT;
 
 start with program; 
 
@@ -109,19 +142,44 @@ declList ::= declList: dl decl: d {: dl.addLast(d); RESULT = dl; :}
 
 decl ::= varDecl: v {: RESULT = v; :}
        | funcDef: f {: RESULT = f; :}
+	   | funcDecl: fd {: RESULT = fd; :}
+	   | structDecl: s {: RESULT = s; :}
        ;
 
-varDecl ::= type: t id: i SEMICOLON
+varDecl ::= type: t id: i semirest
              {: RESULT = new VarDecl(t, i); :}
+		  | type: t id: i LSQBRACKET INTLITERAL:lit RSQBRACKET semirest
+			 {: RESULT = new VarDecl(t,i,lit); :}
           ;
-                
+semirest ::= SEMICOLON
+		  |  {: parser.missing_character(';'); :}
+		  ;
+
+		  
 funcDef ::= type: t id: i formals: f funcBody: body {: RESULT = new FuncDef(t, 0, i, f, body); :}
          ;
+		 
+funcDecl ::= type: t id: i formals: f SEMICOLON {: RESULT = new FuncDecl(t,i,f); :}		 
+;
 
 formals ::= LPAREN RPAREN {: RESULT = new FormalsList(new LinkedList()); :}
-        ;
+          | LPAREN formalsList: l RPAREN {: RESULT = new FormalsList(l); :}
+          ;
+		
+formalsList  ::= formalDecl: fd {: RESULT = new LinkedList(); RESULT.addLast(fd); :}
+			  | formalDecl:fd COMMA formalsList: fl {: fl.addFirst(fd); RESULT = fl; :}
+			  ;
 
-funcBody ::= LCURLY varDeclList: v stmtList: s RCURLY 
+formalDecl	 ::= type: t id: i {: RESULT = new FormalDecl(t,i,0); :}
+;
+
+structDecl	 ::= STRUCT id: i LCURLY varDeclList:vl RCURLY semirest {: RESULT = new StructDecl(i, new StructDeclList(vl));  :}
+;
+
+rleft 		 ::= RCURLY | {: parser.missing_character('}'); :}
+;
+
+funcBody ::= LCURLY varDeclList: v stmtList: s rleft
               {: RESULT = new FuncBody(new DeclList(v), new StmtList(s)); :}
          ;
 
@@ -132,32 +190,106 @@ varDeclList ::= varDeclList: l varDecl: var {: l.addLast(var); RESULT = l; :}
 stmtList ::= stmtList: l stmt: s {: l.addLast(s); RESULT = l; :}
           |  /* epsilon */ {: RESULT = new LinkedList(); :}
           ;
+		  
+forInitStmt ::= assignStmt: a {: RESULT = a; :}		|  		/* epsilon */ {:RESULT = null; :}  
+;
 
-stmt ::= assignStmt:a SEMICOLON {: RESULT = a; :}
+stmt ::= assignStmt:a semirest {: RESULT = a; :}
+	  | ifElseStmt: i {: RESULT = i; :}
+	  | ifStmt: is {: RESULT = is; :}
+	  | forStmt: fs {: RESULT = fs; :}
+	  | whileStmt: ws {:RESULT = ws; :}
+	  | returnStmt: rs {: RESULT = rs; :}
+	  | callStmt: cs {: RESULT = cs; :}
       ;
+	  
+ifStmt ::= IF LPAREN exp: ex RPAREN LCURLY varDeclList: vl stmtList: sl RCURLY {: RESULT = new IfStmt(ex, new DeclList(vl), new StmtList(sl)); :}
+;	  
 
 assignStmt ::= loc: l ASSIGN exp: e {: RESULT = new AssignStmt(l, e); :}
+			| loc: l PLUSEQL exp: e {: RESULT = new AssignStmt(l, new PlusExpr(l, e)); :}
+			| loc: l MINUSEQL exp: e {: RESULT = new AssignStmt(l, new MinusExpr(l, e)); :}
+			| loc: l DIVEQL  exp: e {: RESULT = new AssignStmt(l, new DivideExpr(l, e)); :}
+			| loc: l TIMESEQL exp: e {: RESULT = new AssignStmt(l, new TimesExpr(l, e)); :}
          ;
 
+ifElseStmt	::= IF LPAREN exp: ex RPAREN LCURLY varDeclList: dl1 stmtList: sl1 RCURLY ELSE LCURLY varDeclList: dl2 stmtList: sl2 RCURLY
+{: RESULT = new IfElseStmt(ex, new DeclList(dl1), new StmtList(sl1), new DeclList(dl2), new StmtList(sl2)); :} 	
+;
+
+forStmt ::= FOR LPAREN forInitStmt: fs1 SEMICOLON exp: ex SEMICOLON forInitStmt: fs2 RPAREN LCURLY varDeclList: vl stmtList: sl RCURLY
+{: RESULT = new ForStmt(fs1,ex,fs2, new DeclList(vl), new StmtList(sl)); :} 
+;
+
+whileStmt ::= WHILE LPAREN exp: ex RPAREN LCURLY varDeclList: vl stmtList: sl RCURLY
+{: RESULT = new WhileStmt(ex, new DeclList(vl), new StmtList(sl)); :}
+;
+
+returnStmt ::= RETURN exp: ex semirest {: RESULT = new ReturnStmt(ex); :}
+			| RETURN semirest {: RESULT = new ReturnStmt(null); :}
+			;
+			
+callStmt ::= callExpr: ce semirest {: RESULT = new CallStmt(ce); :}	
+;			
+		 
 exp ::= binaryExpr: b {: RESULT = b; :}
       | term: t {: RESULT = t; :}
+	  | unaryExpr: u {: RESULT = u; :}
       ;
       
+unaryExpr ::= ADDROF exp: e {: RESULT = new AddrOfExpr(e); :}
+			| NOT exp: e {: RESULT = new NotExpr(e); :}
+			| MINUS exp: e {:RESULT = new UnaryMinusExpr(e); :}
+			;
+	  
 binaryExpr ::= exp: e1 PLUS exp: e2 {: RESULT = new PlusExpr(e1, e2); :}
         | exp: e1 MINUS exp: e2 {: RESULT = new MinusExpr(e1, e2); :}
 		| exp: e1 TIMES exp: e2 {: RESULT = new TimesExpr(e1, e2); :}
 		| exp: e1 DIVIDE exp: e2 {: RESULT = new DivideExpr(e1, e2); :}
+		| exp: e1 PERCENT exp: e2 {: RESULT = new PercentExpr(e1, e2); :}
+		| exp: e1 AND exp: e2 {: RESULT = new AndExpr(e1, e2); :}
+		| exp: e1 OR exp: e2 {: RESULT = new OrExpr(e1,e2); :}
+		| exp: e1 EQUALS exp: e2 {: RESULT = new EqualsExpr(e1,e2); :}
+		| exp: e1 NOTEQUALS exp: e2 {: RESULT = new NotEqualsExpr(e1,e2); :}
+		| exp: e1 LESS exp: e2 {: RESULT = new LessExpr(e1,e2); :}
+		| exp: e1 GREATER exp: e2 {: RESULT = new GreaterExpr(e1,e2); :}
+		| exp: e1 LESSEQ exp: e2 {: RESULT = new LessEqExpr(e1,e2); :}
+		| exp: e1 GREATEREQ exp: e2 {: RESULT = new GreaterEqExpr(e1,e2); :}
         ;
         
 term ::= loc: l {: RESULT = l; :}
        | INTLITERAL: i {: RESULT = new IntLiteral(i); :}
+	   | DOUBLELITERAL: d {: RESULT = new DoubleLiteral(d); :}
+	   | STRINGLITERAL: s {: RESULT = new StringLiteral(s); :}
+	   | TRUE: t {: RESULT = new BooleanExpr(t); :}
+	   | FALSE: f {: RESULT = new BooleanExpr(f); :}
+	   | LPAREN exp: e RPAREN {: RESULT = e; :}
+	   | callExpr: ce {: RESULT = ce; :}
+	   | NULL: n 	{: RESULT = new NullExpr(); :}
+	   | SIZEOF LPAREN id: i RPAREN {: RESULT = new SizeOfExpr(i); :}
        ;
+	   
+callExpr ::= id: i LPAREN RPAREN {: RESULT = new CallExpr(i); :}
+			| id: i LPAREN actualList: al RPAREN {: RESULT = new CallExpr(i, new ExprList(al)); :}
+			;
+			
+actualList ::= exp: e {: RESULT = new LinkedList(); RESULT.addLast(e); :}
+			| actualList: al COMMA exp: e {: al.addLast(e); RESULT = al; :}
+			;
+	   
          
 type ::= INT {: RESULT = new IntType(); :}
        | VOID {: RESULT = new VoidType(); :} 
+	   | BOOL {: RESULT = new BoolType(); :}
+	   | STRUCT id: i {: RESULT = new StructType(i); :}
        ;
 
 loc ::= id: i {: RESULT = i; :}
+      | arrayExpr: a {: RESULT = a; :}
+      | loc:e PERIOD id:i {: RESULT = new StructRef(e, i); :}
+      ;
+      
+arrayExpr ::= loc:l LSQBRACKET exp: e RSQBRACKET {: RESULT = new ArrayExpr(l, e); :}
       ;
       
 id ::= ID: i {: RESULT = new ID(i); :}
