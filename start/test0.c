@@ -6,4 +6,5 @@ void main() {
   int d;
   c = a / b;
   d = a * b;
+  a = b + -c;
 }

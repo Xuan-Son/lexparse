@@ -1,10 +1,11 @@
 
 
 import java.util.*;
+import java.io.PrintWriter;
 import java.lang.String;
 
 abstract class AST {
-    
+    public abstract void printTree(PrintWriter pw, int mySpace);
 }
 
 class Program extends AST {
@@ -12,6 +13,15 @@ class Program extends AST {
         myDeclList = L;
     }
     private DeclList myDeclList;
+    public void printTree(PrintWriter pw, int mySpace)
+    {
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("Program");
+    	myDeclList.printTree(pw, mySpace + 4);
+    }
 }
 
 class DeclList extends AST {
@@ -20,6 +30,19 @@ class DeclList extends AST {
     }
 
     protected LinkedList<?> myDecls;
+    
+    public void printTree(PrintWriter pw, int mySpace)
+    {
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("DeclList");
+    	for (int i = 0; i < myDecls.size(); ++i)
+    	{
+    		((AST)myDecls.get(i)).printTree(pw, mySpace + 4);
+    	}
+    }
 }
 
 class StructDeclList extends DeclList {
@@ -34,6 +57,30 @@ class FormalsList extends AST {
     }
 
     private LinkedList<?> myFormals;
+    
+    public void printTree(PrintWriter pw, int mySpace)
+    {
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("formals");
+    	mySpace += 4;
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("LPAREN");
+    	for (int i = 0; i < myFormals.size(); ++i)
+    	{
+    		((AST)myFormals.get(i)).printTree(pw, mySpace);
+    	}
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("RPAREN");
+    }
 }
 
 class FuncBody extends AST {
@@ -44,6 +91,29 @@ class FuncBody extends AST {
 
     private DeclList myDeclList;
     private StmtList myStmtList;
+    
+    public void printTree(PrintWriter pw, int mySpace)
+    {
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("funcBody");
+    	mySpace += 4;
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("LCURLY");
+    	myDeclList.printTree(pw, mySpace);
+    	myStmtList.printTree(pw, mySpace);
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("RCURLY");
+    		
+    }
 }
 
 class StmtList extends AST {
@@ -52,6 +122,18 @@ class StmtList extends AST {
     }
 
     private LinkedList<?> myStmts;
+    public void printTree(PrintWriter pw, int mySpace)
+    {
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("StmtList");
+    	for (int i = 0; i < myStmts.size(); ++i)
+    	{
+    		((AST)myStmts.get(i)).printTree(pw, mySpace + 4);
+    	}
+    }
 }
 
 class ExprList extends AST {
@@ -60,16 +142,28 @@ class ExprList extends AST {
 	}
 	
 	private LinkedList<?> myStmts;
+	public void printTree(PrintWriter pw, int mySpace)
+	{
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("actualList");
+		for (int i = 0; i < myStmts.size(); ++i)
+		{
+			((AST)myStmts.get(i)).printTree(pw, mySpace + 4);
+		}
+	}
 }
 
 abstract class Decl extends AST {
-
 }
 
 class VarDecl extends Decl {
 	public VarDecl(Type type, ID id) {
         myType = type;
         myId = id;
+        myVal = -1;
     }
     public VarDecl(Type type, ID id, int val) {
         myType = type;
@@ -80,6 +174,43 @@ class VarDecl extends Decl {
     private Type      myType;
     private ID        myId;
     private int		  myVal;
+    
+    public void printTree(PrintWriter pw, int mySpace)
+    {
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("varDecl");
+    	mySpace += 4;
+    	myType.printTree(pw, mySpace);
+    	myId.printTree(pw, mySpace);
+    	if (myVal != -1)
+    	{
+    		for (int i = 0; i < mySpace; ++i)
+    		{
+    			pw.print(" ");
+    		}
+    		pw.println("LSQBRACKET");
+    		for (int i = 0; i < mySpace; ++i)
+    		{
+    			pw.print(" ");
+    		}
+    		pw.print("INTLITERAL (");
+    		pw.print(myVal);
+    		pw.println(")");
+    		for (int i = 0; i < mySpace; ++i)
+    		{
+    			pw.print(" ");
+    		}
+    		pw.println("RSQBRACKET");
+    	}
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+    	pw.println("SEMICOLON");
+    }
 }
 
 class FuncDef extends Decl {
@@ -95,6 +226,20 @@ class FuncDef extends Decl {
     private ID          myId;
     private FormalsList myFormalsList;
     private FuncBody    myBody;
+    
+    public void printTree(PrintWriter pw, int mySpace)
+    {
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("funcDef");
+    	mySpace += 4;
+    	myType.printTree(pw, mySpace);
+    	myId.printTree(pw, mySpace);
+    	myFormalsList.printTree(pw, mySpace);
+    	myBody.printTree(pw, mySpace);
+    }
 }
 
 class FormalDecl extends Decl {
@@ -105,6 +250,16 @@ class FormalDecl extends Decl {
 
     private Type myType;
     private ID   myId;
+    public void printTree(PrintWriter pw, int mySpace)
+    {
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("formalDecl");
+    	myType.printTree(pw, mySpace + 4);
+    	myId.printTree(pw, mySpace + 4);
+    }
 }
 
 class FuncDecl extends Decl {
@@ -117,6 +272,22 @@ class FuncDecl extends Decl {
 	private Type myType;
     private ID   myId;
     private FormalsList myFm;
+    public void printTree(PrintWriter pw, int mySpace)
+    {
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("funcDecl");
+    	myType.printTree(pw, mySpace + 4);
+    	myId.printTree(pw, mySpace + 4);
+    	myFm.printTree(pw, mySpace + 4);
+    	for (int i = 0; i < mySpace + 4; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("SEMICOLON");
+    }
 }
 
 class StructDecl extends Decl {
@@ -128,6 +299,37 @@ class StructDecl extends Decl {
 	
 	private ID myId;
 	private StructDeclList mySl;
+	public void printTree(PrintWriter pw, int mySpace)
+	{
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("structDecl");
+		mySpace += 4;
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("STRUCT");
+		myId.printTree(pw, mySpace);
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("LCURLY");
+		mySl.printTree(pw, mySpace);
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("RCURLY");
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("SEMICOLON");
+	}
 }
 
 // **********************************************************************
@@ -145,6 +347,14 @@ class IntType extends Type {
     public String name() {
         return "INT";
     }
+    public void printTree(PrintWriter pw, int mySpace)
+    {
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println(name());
+    }
 }
 
 class VoidType extends Type {
@@ -154,6 +364,15 @@ class VoidType extends Type {
     public String name() {
         return "VOID";
     }
+    
+    public void printTree(PrintWriter pw, int mySpace)
+    {
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println(name());
+    }
 }
 
 class BoolType extends Type {
@@ -162,6 +381,15 @@ class BoolType extends Type {
 
     public String name() {
         return "BOOL";
+    }
+    
+    public void printTree(PrintWriter pw, int mySpace)
+    {
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println(name());
     }
 }
 
@@ -175,6 +403,16 @@ class StructType extends Type {
     }
     
     private ID myId;
+    
+    public void printTree(PrintWriter pw, int mySpace)
+    {
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println(name());
+    	myId.printTree(pw, mySpace);
+    }
 }
 
 
@@ -193,6 +431,14 @@ class IntLiteral extends Expr {
     }
 
     private int myIntVal;
+    
+    public void printTree(PrintWriter pw, int mySpace)
+    {
+    	pw.print(" ");
+    	pw.print("INTLITERAL (");
+    	pw.print(myIntVal);
+    	pw.println(")");
+    }
 }
 
 class DoubleLiteral extends Expr {
@@ -201,6 +447,14 @@ class DoubleLiteral extends Expr {
     }
 
     private double myDoubleVal;
+    
+    public void printTree(PrintWriter pw, int mySpace)
+    {
+    	pw.print(" ");
+    	pw.print("DOUBLELITERAL (");
+    	pw.print(myDoubleVal);
+    	pw.println(")");
+    }
 }
 
 class StringLiteral extends Expr {
@@ -209,6 +463,14 @@ class StringLiteral extends Expr {
     }
 
     private String myStringVal;
+    
+    public void printTree(PrintWriter pw, int mySpace)
+    {
+    	pw.print(" ");
+    	pw.print("STRINGLITERAL (");
+    	pw.print(myStringVal);
+    	pw.println(")");
+    }
 }
 
 class NullExpr extends IntLiteral {
@@ -224,6 +486,26 @@ class SizeOfExpr extends Expr {
 	}
 	
 	private ID myId;
+	
+	public void printTree(PrintWriter pw, int mySpace)
+	{
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("SIZEOF");
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("LPAREN");
+		myId.printTree(pw, mySpace);
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("RPAREN");
+	}
 }
 
 class BooleanExpr extends Expr {
@@ -233,6 +515,17 @@ class BooleanExpr extends Expr {
 	}
 	
 	private Boolean myB;
+	public void printTree(PrintWriter pw, int mySpace)
+	{
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		if (myB == true)
+			pw.println("TRUE");
+		else
+			pw.println("FALSE");
+	}
 }
 
 class ID extends Expr {
@@ -245,6 +538,14 @@ class ID extends Expr {
     }
 
     private String myStrVal;
+    public void printTree(PrintWriter pw, int mySpace)
+    {
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("ID");
+    }
 }
 
 class ArrayExpr extends Expr {
@@ -253,6 +554,28 @@ class ArrayExpr extends Expr {
 		myE1 = e1;
 		myE2 = e2;
 		e1 = null;
+	}
+	
+	public void printTree(PrintWriter pw, int mySpace)
+	{
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("arrayExpr");
+		mySpace += 4;
+		myE1.printTree(pw, mySpace);
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("LSQBRACKET");
+		myE2.printTree(pw, mySpace);
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("RSQBRACKET");
 	}
 	
 	private Expr myE1;
@@ -268,6 +591,23 @@ class StructRef extends Expr {
 	
 	private Expr myEx;
 	private ID myId;
+	
+	public void printTree(PrintWriter pw, int mySpace)
+	{
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("loc");
+		mySpace += 4;
+		myEx.printTree(pw, mySpace);
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("PERIOD");
+		myId.printTree(pw, mySpace);
+	}
 }
 
 abstract class BinaryExpr extends Expr {
@@ -284,6 +624,16 @@ class PlusExpr extends BinaryExpr {
     public PlusExpr(Expr exp1, Expr exp2) {
         super(exp1, exp2);
     }
+	public void printTree(PrintWriter pw, int mySpace)
+	{
+		myExp1.printTree(pw, mySpace);
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("PLUS");
+		myExp2.printTree(pw, mySpace);
+	}
 }
 
 class MinusExpr extends BinaryExpr {
@@ -291,12 +641,34 @@ class MinusExpr extends BinaryExpr {
         super(exp1, exp2);
     }
 
+	public void printTree(PrintWriter pw, int mySpace)
+	{
+		myExp1.printTree(pw, mySpace);
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("MINUS");
+		myExp2.printTree(pw, mySpace);
+	}
+    
 }
 
 class TimesExpr extends BinaryExpr {
     public TimesExpr(Expr exp1, Expr exp2) {
         super(exp1, exp2);
     }
+    
+	public void printTree(PrintWriter pw, int mySpace)
+	{
+		myExp1.printTree(pw, mySpace);
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("TIMES");
+		myExp2.printTree(pw, mySpace);
+	}
 
 }
 
@@ -304,6 +676,17 @@ class DivideExpr extends BinaryExpr {
     public DivideExpr(Expr exp1, Expr exp2) {
         super(exp1, exp2);
     }
+    
+	public void printTree(PrintWriter pw, int mySpace)
+	{
+		myExp1.printTree(pw, mySpace);
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("DIVIDE");
+		myExp2.printTree(pw, mySpace);
+	}
 
 }
 
@@ -311,6 +694,17 @@ class PercentExpr extends BinaryExpr {
     public PercentExpr(Expr exp1, Expr exp2) {
         super(exp1, exp2);
     }
+    
+	public void printTree(PrintWriter pw, int mySpace)
+	{
+		myExp1.printTree(pw, mySpace);
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("PERCENT");
+		myExp2.printTree(pw, mySpace);
+	}
 
 }
 
@@ -318,6 +712,17 @@ class AndExpr extends BinaryExpr {
     public AndExpr(Expr exp1, Expr exp2) {
         super(exp1, exp2);
     }
+    
+	public void printTree(PrintWriter pw, int mySpace)
+	{
+		myExp1.printTree(pw, mySpace);
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("AND");
+		myExp2.printTree(pw, mySpace);
+	}
 
 }
 
@@ -325,6 +730,17 @@ class OrExpr extends BinaryExpr {
     public OrExpr(Expr exp1, Expr exp2) {
         super(exp1, exp2);
     }
+    
+	public void printTree(PrintWriter pw, int mySpace)
+	{
+		myExp1.printTree(pw, mySpace);
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("OR");
+		myExp2.printTree(pw, mySpace);
+	}
 
 }
 
@@ -332,6 +748,17 @@ class EqualsExpr extends BinaryExpr {
     public EqualsExpr(Expr exp1, Expr exp2) {
         super(exp1, exp2);
     }
+    
+	public void printTree(PrintWriter pw, int mySpace)
+	{
+		myExp1.printTree(pw, mySpace);
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("EQUALS");
+		myExp2.printTree(pw, mySpace);
+	}
 
 }
 
@@ -339,6 +766,17 @@ class NotEqualsExpr extends BinaryExpr {
     public NotEqualsExpr(Expr exp1, Expr exp2) {
         super(exp1, exp2);
     }
+    
+	public void printTree(PrintWriter pw, int mySpace)
+	{
+		myExp1.printTree(pw, mySpace);
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("NOTEQUALS");
+		myExp2.printTree(pw, mySpace);
+	}
 
 }
 
@@ -346,6 +784,17 @@ class LessExpr extends BinaryExpr {
     public LessExpr(Expr exp1, Expr exp2) {
         super(exp1, exp2);
     }
+    
+	public void printTree(PrintWriter pw, int mySpace)
+	{
+		myExp1.printTree(pw, mySpace);
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("LESS");
+		myExp2.printTree(pw, mySpace);
+	}
 
 }
 
@@ -353,6 +802,17 @@ class GreaterExpr extends BinaryExpr {
     public GreaterExpr(Expr exp1, Expr exp2) {
         super(exp1, exp2);
     }
+    
+	public void printTree(PrintWriter pw, int mySpace)
+	{
+		myExp1.printTree(pw, mySpace);
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("GREATER");
+		myExp2.printTree(pw, mySpace);
+	}
 
 }
 
@@ -360,6 +820,17 @@ class LessEqExpr extends BinaryExpr {
     public LessEqExpr(Expr exp1, Expr exp2) {
         super(exp1, exp2);
     }
+    
+	public void printTree(PrintWriter pw, int mySpace)
+	{
+		myExp1.printTree(pw, mySpace);
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("LESSEQ");
+		myExp2.printTree(pw, mySpace);
+	}
 
 }
 
@@ -367,6 +838,17 @@ class GreaterEqExpr extends BinaryExpr {
     public GreaterEqExpr(Expr exp1, Expr exp2) {
         super(exp1, exp2);
     }
+    
+	public void printTree(PrintWriter pw, int mySpace)
+	{
+		myExp1.printTree(pw, mySpace);
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("GREATEREQ");
+		myExp2.printTree(pw, mySpace);
+	}
 
 }
 
@@ -375,6 +857,7 @@ class CallExpr extends Expr
 	public CallExpr(ID id)
 	{
 		myId = id;
+		myEl = null;
 	}
 	
 	public CallExpr(ID id, ExprList el)
@@ -385,6 +868,25 @@ class CallExpr extends Expr
 	
 	private ID myId;
 	private ExprList myEl;
+	
+	public void printTree(PrintWriter pw, int mySpace)
+	{
+		myId.printTree(pw, mySpace);
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("LPAREN");
+		if (myEl != null)
+		{
+			myEl.printTree(pw, mySpace);
+		}
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("RPAREN");
+	}
 }
 
 class UnaryExpr extends Expr
@@ -395,6 +897,7 @@ class UnaryExpr extends Expr
 	}
 	
 	protected Expr myEx;
+	public void printTree(PrintWriter pw, int mySpace){}
 }
 
 class AddrOfExpr extends UnaryExpr
@@ -402,6 +905,17 @@ class AddrOfExpr extends UnaryExpr
 	public AddrOfExpr(Expr ex)
 	{
 		super(ex);
+	}
+	
+	public void printTree(PrintWriter pw, int mySpace)
+	{
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("ADDROF");
+		myEx.printTree(pw, mySpace);
+		
 	}
 }
 
@@ -411,6 +925,17 @@ class NotExpr extends UnaryExpr
 	{
 		super(ex);
 	}
+	
+	public void printTree(PrintWriter pw, int mySpace)
+	{
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("NOT");
+		myEx.printTree(pw, mySpace);
+		
+	}
 }
 
 class UnaryMinusExpr extends UnaryExpr
@@ -418,6 +943,17 @@ class UnaryMinusExpr extends UnaryExpr
 	public UnaryMinusExpr(Expr ex)
 	{
 		super(ex);
+	}
+	
+	public void printTree(PrintWriter pw, int mySpace)
+	{
+		for (int i = 0; i < mySpace; ++i)
+		{
+			pw.print(" ");
+		}
+		pw.println("MINUS");
+		myEx.printTree(pw, mySpace);
+		
 	}
 }
 
@@ -437,6 +973,18 @@ class AssignStmt extends Stmt {
 
     private Expr myLhs;
     private Expr myExp;
+    
+    public void printTree(PrintWriter pw, int mySpace)
+    {
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("assignStmt");
+    	mySpace += 4;
+    	myLhs.printTree(pw, mySpace);
+    	myExp.printTree(pw, mySpace);
+    }
 }
 
 class IfStmt extends Stmt {
@@ -450,6 +998,44 @@ class IfStmt extends Stmt {
 	private Expr myEx;
 	private DeclList mySdl;
 	private StmtList mySl;
+	
+    public void printTree(PrintWriter pw, int mySpace)
+    {
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("ifStmt");
+    	mySpace += 4;
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("IF");
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("LPAREN");
+    	myEx.printTree(pw, mySpace);
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("RPAREN");
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("LCURLY");
+    	mySdl.printTree(pw, mySpace);
+    	mySl.printTree(pw, mySpace);
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("RCURLY");
+    }
 }
 
 class IfElseStmt extends Stmt {
@@ -467,6 +1053,61 @@ class IfElseStmt extends Stmt {
 	private DeclList mySdl2;
 	private StmtList myS1;
 	private StmtList myS2;
+	
+	public void printTree(PrintWriter pw, int mySpace)
+	{
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("ifElseStmt");
+    	mySpace += 4;
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("IF");
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("LPAREN");
+    	myEx.printTree(pw, mySpace);
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("RPAREN");
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("LCURLY");
+    	mySdl1.printTree(pw, mySpace);
+    	myS1.printTree(pw, mySpace);
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("RCURLY");
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("ELSE");
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("LCURLY");
+    	mySdl2.printTree(pw, mySpace);
+    	myS1.printTree(pw, mySpace);
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("RCURLY");
+	}
 }
 
 class WhileStmt extends Stmt {
@@ -480,6 +1121,44 @@ class WhileStmt extends Stmt {
 	private Expr myEx;
 	private DeclList mySdl;
 	private StmtList mySl;
+	
+	public void printTree(PrintWriter pw, int mySpace)
+	{
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("whileStmt");
+    	mySpace += 4;
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("WHILE");
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("LPAREN");
+    	myEx.printTree(pw, mySpace);
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("RPAREN");
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("LCURLY");
+    	mySdl.printTree(pw, mySpace);
+    	mySl.printTree(pw, mySpace);
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("RCURLY");
+	}
 }
 
 class ReturnStmt extends Stmt {
@@ -489,6 +1168,26 @@ class ReturnStmt extends Stmt {
 	}
 	
 	private Expr myEx;
+	public void printTree(PrintWriter pw, int mySpace)
+	{
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("returnStmt");
+    	mySpace += 4;
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("RETURN");
+    	myEx.printTree(pw, mySpace);
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("SEMICOLON");
+	}
 }
 
 class ForStmt extends Stmt {
@@ -506,6 +1205,56 @@ class ForStmt extends Stmt {
 	private Stmt myIncre;
 	private DeclList myDl;
 	private StmtList mySl;
+	
+	public void printTree(PrintWriter pw, int mySpace)
+	{
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("forStmt");
+    	mySpace += 4;
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("FOR");
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("LPAREN");
+    	myInit.printTree(pw, mySpace);
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("SEMICOLON");
+    	myCond.printTree(pw, mySpace);
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("SEMICOLON");
+    	myIncre.printTree(pw, mySpace);
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("RPAREN");
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("LCURLY");
+    	myDl.printTree(pw, mySpace);
+    	mySl.printTree(pw, mySpace);
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("RCURLY");
+	}
 }
 
 class CallStmt extends Stmt {
@@ -515,4 +1264,20 @@ class CallStmt extends Stmt {
 	}
 	
 	private CallExpr myCe;
+	
+	public void printTree(PrintWriter pw, int mySpace)
+	{
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("callStmt");
+    	mySpace += 4;
+    	myCe.printTree(pw, mySpace);
+    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.println("SEMICOLON");
+	}
 }

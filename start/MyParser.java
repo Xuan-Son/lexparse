@@ -40,7 +40,8 @@ public class MyParser {
             File outFile = new File(outName);
             p = new PrintWriter(new BufferedWriter(new FileWriter(outFile)));
             
-            p.println("Haven't implemented yet!");
+            //p.println("Haven't implemented yet!");
+            root.printTree(p,0);
         } catch (IOException ex) {
             System.err.println("File " + outName + " could not be opened.");
             System.exit(-1);
