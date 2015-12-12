@@ -1,8 +1,8 @@
 Program
     DeclList
         funcDef
-            VOID
-            ID
+            TYPE (VOID)
+            ID (main)
             formals
                 LPAREN
                 RPAREN
@@ -10,36 +10,39 @@ Program
                 LCURLY
                 DeclList
                     varDecl
-                        INT
-                        ID
+                        TYPE (INT)
+                        ID (a)
                         SEMICOLON
                     varDecl
-                        INT
-                        ID
+                        TYPE (INT)
+                        ID (b)
                         SEMICOLON
                     varDecl
-                        INT
-                        ID
+                        TYPE (INT)
+                        ID (c)
                         SEMICOLON
                     varDecl
-                        INT
-                        ID
+                        TYPE (INT)
+                        ID (d)
                         SEMICOLON
                 StmtList
                     assignStmt
-                        ID
-                        ID
+                        ID (c)
+                        ASSIGN
+                        ID (a)
                         DIVIDE
-                        ID
+                        ID (b)
                     assignStmt
-                        ID
-                        ID
+                        ID (d)
+                        ASSIGN
+                        ID (a)
                         TIMES
-                        ID
+                        ID (b)
                     assignStmt
-                        ID
-                        ID
+                        ID (a)
+                        ASSIGN
+                        ID (b)
                         PLUS
                         MINUS
-                        ID
+                        ID (c)
                 RCURLY

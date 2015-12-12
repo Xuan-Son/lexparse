@@ -1,4 +1,0 @@
-Manifest-Version: 1.0
-Class-Path: .
-Main-Class: cs321.assignment3.end.MyParser
-

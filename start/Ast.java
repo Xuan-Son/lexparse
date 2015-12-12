@@ -338,6 +338,14 @@ class StructDecl extends Decl {
 abstract class Type extends AST {
 
     abstract public String name();
+	public void printTree(PrintWriter pw, int mySpace)
+	{
+		    	for (int i = 0; i < mySpace; ++i)
+    	{
+    		pw.print(" ");
+    	}
+    	pw.print("TYPE (");
+	}
 }
 
 class IntType extends Type {
@@ -349,11 +357,9 @@ class IntType extends Type {
     }
     public void printTree(PrintWriter pw, int mySpace)
     {
-    	for (int i = 0; i < mySpace; ++i)
-    	{
-    		pw.print(" ");
-    	}
-    	pw.println(name());
+		super.printTree(pw, mySpace);
+		pw.print(name());
+    	pw.println(")");
     }
 }
 
@@ -367,11 +373,9 @@ class VoidType extends Type {
     
     public void printTree(PrintWriter pw, int mySpace)
     {
-    	for (int i = 0; i < mySpace; ++i)
-    	{
-    		pw.print(" ");
-    	}
-    	pw.println(name());
+		super.printTree(pw, mySpace);
+		pw.print(name());
+    	pw.println(")");
     }
 }
 
@@ -385,11 +389,9 @@ class BoolType extends Type {
     
     public void printTree(PrintWriter pw, int mySpace)
     {
-    	for (int i = 0; i < mySpace; ++i)
-    	{
-    		pw.print(" ");
-    	}
-    	pw.println(name());
+		super.printTree(pw, mySpace);
+		pw.print(name());
+    	pw.println(")");
     }
 }
 
@@ -544,7 +546,9 @@ class ID extends Expr {
     	{
     		pw.print(" ");
     	}
-    	pw.println("ID");
+    	pw.print("ID (");
+		pw.print(myStrVal);
+		pw.println(")");
     }
 }
 
@@ -966,13 +970,15 @@ abstract class Stmt extends AST {
 }
 
 class AssignStmt extends Stmt {
-    public AssignStmt(Expr lhs, Expr exp) {
+    public AssignStmt(Expr lhs, Expr exp, int dm) {
         myLhs = lhs;
         myExp = exp;
+		myDm = dm;
     }
 
     private Expr myLhs;
     private Expr myExp;
+	private int myDm;
     
     public void printTree(PrintWriter pw, int mySpace)
     {
@@ -983,6 +989,14 @@ class AssignStmt extends Stmt {
     	pw.println("assignStmt");
     	mySpace += 4;
     	myLhs.printTree(pw, mySpace);
+		if (myDm == 1)
+		{
+			for (int i = 0; i < mySpace; ++i)
+			{
+				pw.print(" ");
+			}
+			pw.println("ASSIGN");
+		}
     	myExp.printTree(pw, mySpace);
     }
 }

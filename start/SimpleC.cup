@@ -206,11 +206,11 @@ stmt ::= assignStmt:a semirest {: RESULT = a; :}
 ifStmt ::= IF LPAREN exp: ex RPAREN LCURLY varDeclList: vl stmtList: sl RCURLY {: RESULT = new IfStmt(ex, new DeclList(vl), new StmtList(sl)); :}
 ;	  
 
-assignStmt ::= loc: l ASSIGN exp: e {: RESULT = new AssignStmt(l, e); :}
-			| loc: l PLUSEQL exp: e {: RESULT = new AssignStmt(l, new PlusExpr(l, e)); :}
-			| loc: l MINUSEQL exp: e {: RESULT = new AssignStmt(l, new MinusExpr(l, e)); :}
-			| loc: l DIVEQL  exp: e {: RESULT = new AssignStmt(l, new DivideExpr(l, e)); :}
-			| loc: l TIMESEQL exp: e {: RESULT = new AssignStmt(l, new TimesExpr(l, e)); :}
+assignStmt ::= loc: l ASSIGN exp: e {: RESULT = new AssignStmt(l, e, 1); :}
+			| loc: l PLUSEQL exp: e {: RESULT = new AssignStmt(l, new PlusExpr(l, e), 0); :}
+			| loc: l MINUSEQL exp: e {: RESULT = new AssignStmt(l, new MinusExpr(l, e), 0); :}
+			| loc: l DIVEQL  exp: e {: RESULT = new AssignStmt(l, new DivideExpr(l, e), 0); :}
+			| loc: l TIMESEQL exp: e {: RESULT = new AssignStmt(l, new TimesExpr(l, e), 0); :}
          ;
 
 ifElseStmt	::= IF LPAREN exp: ex RPAREN LCURLY varDeclList: dl1 stmtList: sl1 RCURLY ELSE LCURLY varDeclList: dl2 stmtList: sl2 RCURLY
